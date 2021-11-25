@@ -5,6 +5,7 @@
 
 import json 
 import numpy as np
+import os
 import copy
 from datetime import datetime
 
@@ -72,7 +73,7 @@ def getLongestArray(x):
     #IF object
     return n
 
-def savetoFile(defaultContent, numset):
+def savetoFile(defaultContent, numset,filename):
     #save json files with the name including date and object, which variation changes, and number of trials
     allnumTrial = getLongestArray(defaultContent);
 
@@ -120,11 +121,16 @@ def savetoFile(defaultContent, numset):
         len(defaultContent["CAMERAS"]["camera00"]["targetTHREEJS"]["z"]) >1
        ):
         paramStrategy["CAMERA"] = "c"
+    
+    if filename:
+        newfileName = saveDate + "_" + filename + 'im' + str(allnumTrial) +"_dur" + \
+        str(defaultContent["durationMS"][0]) + "ms" + ".json"
 
-    newfileName = saveDate + "_" + "Var6" + paramStrategy["VIEW"] + paramStrategy["BACKGROUND"] + \
-    paramStrategy["SIZE"] + paramStrategy["POSITION"] + paramStrategy["LIGHTING"] + paramStrategy["CAMERA"] + "_" + "set" + \
-    str(numset) +"_" +"im" +str(allnumTrial) +"_" +firstobj +"-" +multiobj +"_dur" + \
-    str(defaultContent["durationMS"][0]) + "ms" + ".json";
+    else:
+        newfileName = saveDate + "_" + "Var6" + paramStrategy["VIEW"] + paramStrategy["BACKGROUND"] + \
+        paramStrategy["SIZE"] + paramStrategy["POSITION"] + paramStrategy["LIGHTING"] + paramStrategy["CAMERA"] + "_" + "set" + \
+        str(numset) +"_" +"im" +str(allnumTrial) +"_" +firstobj +"-" +multiobj +"_dur" + \
+        str(defaultContent["durationMS"][0]) + "ms" + ".json";
     print(newfileName)
     with open(newfileName, 'w') as json_file:
           json.dump(defaultContent, json_file,indent = 2)
@@ -145,7 +151,9 @@ objvisiblelist,
                   
 durationMS,
 bkgidx,
-bkgsize
+bkgsize,
+             
+meshpathfile
 ): 
     if type(template_file) == str:
         content = json.load(open(template_file))
@@ -193,7 +201,12 @@ bkgsize
     if len(objnamelist) != 0:
         for i,obj in enumerate(objnamelist):
             content["OBJECTS"][obj] = {};
-            content["OBJECTS"][obj]["meshpath"] = "";
+            
+            if meshpathfile:
+                m = json.load(open(meshpathfile))
+                content["OBJECTS"][obj]["meshpath"] = m[obj];
+            else:
+                content["OBJECTS"][obj]["meshpath"] = "";
             content["OBJECTS"][obj]["objectdoc"] = "";
            
             content["OBJECTS"][obj]["material"] = {
@@ -202,7 +215,7 @@ bkgsize
                 "metalness": 0.25,
                 "roughness": 0.65,
                 "reflectivity": 0.5,
-                "opacity": [],
+                "opacity": [1],
                 "transparent": "false",
             };
             
@@ -252,12 +265,12 @@ bkgsize
                     
                 content["OBJECTS"][obj]["visible"] = [objvisible];
             else:
-                content["OBJECTS"][obj]['visible']= [1]
+                content["OBJECTS"][obj]['visible']= []
 
-            content["OBJECTS"][obj]["morphTarget"] = []
+#             content["OBJECTS"][obj]["morphTarget"] = []
 
     #IMAGES
-    content["IMAGES"]["imagebag"] = "/mkturkfiles/imagebags/background_im/";
+    content["IMAGES"]["imagebag"] = "/mkturkfiles/scenebags/objectome3d/background/";
     
     if len(bkgidx) !=0:
         content["IMAGES"]["imageidx"] = bkgidx;
@@ -299,15 +312,17 @@ objparam
                 print('object is not part of scenefile') 
                 break
             else:
-                if (objparamType == "sizeTHREEJS" or objparamType == "visible"):
-                    scenefile_new["OBJECTS"][obj][objparamType].append(objparam[i]);
+                if objparamType == "visible":
+                    scenefile_new["OBJECTS"][obj][objparamType].append(int(objparam[i]));
                 elif (
                     objparamType == "positionTHREEJS" or
                     objparamType == "rotationDegrees"):   
 
-                    scenefile_new["OBJECTS"][obj][objparamType]['x'].append(objparam[i][0]);
-                    scenefile_new["OBJECTS"][obj][objparamType]['y'].append(objparam[i][1]);
-                    scenefile_new["OBJECTS"][obj][objparamType]['z'].append(objparam[i][2]);
+                    scenefile_new["OBJECTS"][obj][objparamType]['x'].append(float(objparam[i][0]));
+                    scenefile_new["OBJECTS"][obj][objparamType]['y'].append(float(objparam[i][1]));
+                    scenefile_new["OBJECTS"][obj][objparamType]['z'].append(float(objparam[i][2]));
+                elif objparamType == "sizeTHREEJS":
+                    scenefile_new["OBJECTS"][obj][objparamType].append(float(objparam[i]));
                 else:
                     print("wrong object param Type");
                     break
@@ -348,7 +363,8 @@ def mergeScenefiles(filelist):
     # files must have the same fields/structure
     # files must have the same 3d objects
     # parameters not in param_change are going to assume the parameters in the first scenefile from the filelist
-    param_change = json.load(open('param_change.js'))
+    current_dir = os.getcwd()
+    param_change = json.load(open(current_dir + '/param_change.js'))
     if type(filelist[0]) == str :
         firstContent = json.load(open(filelist[0]))
     else :
@@ -356,8 +372,8 @@ def mergeScenefiles(filelist):
 
     content_merged = copy.deepcopy(firstContent)
 
-    allobj = firstContent['OBJECTS'];
-    alllight = firstContent['LIGHTS'];
+    allobj = list(firstContent['OBJECTS'].keys());
+    alllight = list(firstContent['LIGHTS'].keys());
     defaultcam = firstContent['CAMERAS']['camera00']
 
     allTrial = []
@@ -368,8 +384,8 @@ def mergeScenefiles(filelist):
         else :
             content = copy.deepcopy(file)
 
-        contentobj =content['OBJECTS'];
-        contentlight = content['LIGHTS']
+        contentobj =list(content['OBJECTS'].keys());
+        contentlight = list(content['LIGHTS'].keys())
         contentcam = content['CAMERAS']['camera00']
 
         if not all(elem in allobj  for elem in contentobj):
@@ -384,7 +400,7 @@ def mergeScenefiles(filelist):
             print('scenefiles don''t have the same camera type')
             break
 
-        numTrial = getLongestArray(file);
+        numTrial = getLongestArray(content);
 
         # Lengthen params by numTrial
         for param in param_change:
@@ -395,23 +411,23 @@ def mergeScenefiles(filelist):
                             sub_sub_param = ['x','y','z']
                             for p in sub_sub_param: 
                                 if (len(content[param][obj][sub_param][p]) == 1):
-                                    content[param][obj][sub_param][p] = np.repeat(content[param][obj][sub_param][p][0],numTrial)
+                                    content[param][obj][sub_param][p] = np.repeat(content[param][obj][sub_param][p][0],numTrial).tolist()
                                 elif len(content[param][obj][sub_param][p]) == 0:
-                                     content[param][obj][sub_param][p] = np.repeat("",numTrial)
+                                     content[param][obj][sub_param][p] = np.repeat("",numTrial).tolist()
                         else:
                             if len(content[param][obj][sub_param]) == 1:
-                                content[param][obj][sub_param] = np.repeat(content[param][obj][sub_param][0],numTrial)
+                                content[param][obj][sub_param] = np.repeat(content[param][obj][sub_param][0],numTrial).tolist()
                             elif len(content[param][obj][sub_param]) == 0:
-                                content[param][obj][sub_param] = np.repeat("",numTrial)
+                                content[param][obj][sub_param] = np.repeat("",numTrial).tolist()
             elif param == 'IMAGES' or param == 'IMAGEFILTERS' or param == 'OBJECTFILTERS': # IMAGES, FILTERS. 
                 for sub_param in param_change[param]:
                     if len(content[param][sub_param]) == 1:
-                        content[param][sub_param] = np.repeat(content[param][sub_param][0],numTrial)
+                        content[param][sub_param] = np.repeat(content[param][sub_param][0],numTrial).tolist()
                     elif len(content[param][sub_param]) == 0:
-                        content[param][sub_param] = np.repeat("",numTrial)
+                        content[param][sub_param] = np.repeat("",numTrial).tolist()
             elif param == 'durationMS':
                 if (len(content[param]) == 1) :
-                    content[param] = np.repeat(content[param][0],numTrial);
+                    content[param] = np.repeat(content[param][0],numTrial).tolist();
 
        # create an array of all trials 
         fileTrial = []
@@ -490,7 +506,7 @@ def mergeScenefiles(filelist):
 
 def editScenefile(scenefile,paramObject,paramType,param):
     # replace scenefile params
-                         '
+           
     content = copy.deepcopy(scenefile)
     if 'camera' in paramObject:
         if paramType == 'camSetting':
@@ -524,7 +540,7 @@ def editScenefile(scenefile,paramObject,paramType,param):
         content['durationMS'] = param 
         
     elif 'IMAGES' in paramObject:
-        if paramType == 'sizeTHREEJS' or paramType == 'imagebagidx':
+        if paramType == 'sizeTHREEJS' or paramType == 'imageidx':
             content['IMAGES'][paramType] = param
         
     elif 'IMAGEFILTERS' in paramObject:
