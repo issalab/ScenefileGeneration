@@ -7,7 +7,7 @@ Current work flow is
 3) put its path in an agent param file
 4) Run the agent on mkturk-lab 
 
-Since there's no easy way to visualize your scene as you change these parameters in real-time, it's a good idea to have an intuition of how the numbers you put in a scenefile wiil actually translate to the screen. 
+Since there's no easy way to visualize your scene as you change these parameters in real-time, it's a good idea to have an intuition of how the numbers you put in a scenefile will actually translate to the screen. 
 
 In a THREEJS environment, your objects (including camera) have 3D xyz coordinates. 
 
