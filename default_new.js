@@ -88,5 +88,6 @@
   "opacity" : [],
   "saturate": [],
   "sepia": []
- }
+ },
+"crop": []
 }
