@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 #TODO: Add the ability to include arbitrarily many objects, cameras, lights
-#TODO: Add the ability to animate filter params.
+#TODO: Add the ability to animate filter params, background indices.
 #TODO: Add flags to accurately maintain the number of stimuli within and across scene elements.
 #TODO: Abstract the logic of scene element into a separate class.
 #TODO: Include ability to save out scenefile to JSON.
@@ -31,6 +31,43 @@ class Camera:
     def set_target(self, target):
         self.target = target
         self.num_stimuli = max(self.num_stimuli, target.shape[1])
+
+    def is_consistent(self):
+        return self.position.shape[1] == self.target.shape[1] == self.num_stimuli
+    
+    def duplicate(self, factor):
+        self.set_position(np.repeat(self.position, factor, axis=1))
+        self.set_target(np.repeat(self.target, factor, axis=1))
+
+    def copy(self):
+        cam = Camera(self.camera_type, self.field_of_view,
+                     self.near, self.far, self.visible)
+        cam.set_position(self.position.copy())
+        cam.set_target(self.target.copy())
+        return cam
+
+    def subset(self, i, j):
+        assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
+        sub_cam = Camera(self.camera_type, self.field_of_view,
+                         self.near, self.far)
+        sub_cam.set_position(self.position[:,i:j+1])
+        sub_cam.set_target(self.target[:,i:j+1])
+        return sub_cam
+
+    def concatenate(cam1, cam2):
+        assert cam1.is_consistent() and cam2.is_consistent()
+        assert cam1.camera_type == cam2.camera_type
+        assert cam1.field_of_view == cam2.field_of_view
+        assert cam1.near == cam2.near
+        assert cam1.far == cam2.far
+        assert cam1.visible == cam2.visible
+        cam = Camera(cam1.camera_type, 
+                     cam1.field_of_view, 
+                     cam1.near, cam1.far, 
+                     cam1.visible)
+        cam.set_position(np.concatenate((cam1.position, cam2.position), axis=1))
+        cam.set_target(np.concatenate((cam1.target, cam2.target), axis=1))
+        return cam
 
     def to_dict(self):
         cam_dict = {"type": self.camera_type,
@@ -88,6 +125,38 @@ class Light:
         # Must input expanded array of positions!
         self.position = position
         self.num_stimuli = max(self.num_stimuli, position.shape[1])
+
+    def is_consistent(self):
+        return self.position.shape[1] == self.num_stimuli
+    
+    def duplicate(self, factor):
+        self.set_position(np.repeat(self.position, factor, axis=1))
+
+    def copy(self):
+        light = Light(self.light_type, self.color,
+                         self.intensity, self.visible)
+        light.set_position(self.position.copy())
+        return light
+
+    def subset(self, i, j):
+        assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
+        sub_light = Light(self.light_type, self.color,
+                         self.intensity, self.visible)
+        sub_light.set_position(self.position[:,i:j+1])
+        return sub_light
+
+    def concatenate(light1, light2):
+        assert light1.is_consistent() and light2.is_consistent(), "Lights not consistent!"
+        assert light1.light_type == light2.light_type
+        assert light1.color == light2.color
+        assert light1.intensity == light2.intensity
+        assert light1.visible == light2.visible
+        light = Camera(light1.light_type, 
+                     light1.color, 
+                     light1.intensity, 
+                     light1.visible)
+        light.set_position(np.concatenate((light1.position, light2.position), axis=1))
+        return light
 
     def to_dict(self):
         light_dict = {"type": self.light_type,
@@ -165,6 +234,70 @@ class Object:
     def set_target(self, targets):
         self.target = targets
         self.num_stimuli = max(self.num_stimuli, targets.shape[0])
+
+    def is_consistent(self):
+        return self.position.shape[1] == self.rotation.shape[1] \
+            == self.visible.shape[0] == self.target.shape[0]
+    
+    def duplicate(self, factor):
+        self.set_size(np.repeat(self.size, factor))
+        self.set_position(np.repeat(self.position, factor, axis=1))
+        self.set_rotation(np.repeat(self.rotation, factor, axis=1))
+        self.set_visible(np.repeat(self.visible, factor))
+        self.set_target(np.repeat(self.target, factor))
+
+    def copy(self):
+        obj = Object(self.meshpath, self.objectdoc,
+                         self.texture, self.material_type,
+                         self.material_color, self.material_metalness,
+                         self.material_roughness, self.material_reflectivity,
+                         self.material_opacity, self.material_transparent)
+        obj.set_size(self.size.copy())
+        obj.set_position(self.position.copy())
+        obj.set_rotation(self.rotation.copy())
+        obj.set_visible(self.visible.copy())
+        obj.set_target(self.target.copy())
+        return obj
+
+    def subset(self, i, j):
+        assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
+        sub_obj = Object(self.meshpath, self.objectdoc,
+                         self.texture, self.material_type,
+                         self.material_color, self.material_metalness,
+                         self.material_roughness, self.material_reflectivity,
+                         self.material_opacity, self.material_transparent)
+        sub_obj.set_size(self.size[i:j+1])
+        sub_obj.set_position(self.position[:,i:j+1])
+        sub_obj.set_rotation(self.rotation[:,i:j+1])
+        sub_obj.set_visible(self.visible[i:j+1])
+        sub_obj.set_target(self.target[i:j+1])
+        return sub_obj
+
+    def concatenate(o1, o2):
+        assert o1.is_consistent() and o2.is_consistent()
+        assert o1.meshpath == o2.meshpath
+        assert o1.objectdoc == o2.objectdoc
+        assert o1.texture == o2.texture
+        assert o1.material_type == o2.material_type
+        assert o1.material_color == o2.material_color
+        assert o1.material_metalness == o2.material_metalness
+        assert o1.material_roughness == o2.material_roughness
+        assert o1.material_reflectivity == o2.material_reflectivity
+        assert o1.material_opacity == o2.material_opacity
+        assert o1.material_transparent == o2.material_transparent
+        obj = Object(o1.meshpath, o1.objectdoc, o1.texture,
+                     o1.material_type, o1.material_color,
+                     o1.material_metalness,
+                     o1.material_roughness, 
+                     o1.material_reflectivity,
+                     o1.material_opacity,
+                     o1.material_transparent)
+        obj.set_size(np.concatenate((o1.size, o2.size)))
+        obj.set_position(np.concatenate((o1.position, o2.position), axis=1))
+        obj.set_rotation(np.concatenate((o1.rotation, o2.rotation), axis=1))
+        obj.set_visible(np.concatenate((o1.visible, o2.visible)))
+        obj.set_target(np.concatenate((o1.target, o2.target)))
+        return obj
 
     def to_dict(self):
         obj_dict = {"meshpath": self.meshpath,
@@ -251,6 +384,32 @@ class Image:
         self.imageidx = imageidx
         self.visible = visible
         self.size = img_size
+        self.num_stimuli = -1
+
+    def is_consistent(self):
+        return True
+    
+    def duplicate(self, factor):
+        return
+
+    def copy(self):
+        img = Image(self.imagebag, self.imageidx, self.visible, self.size)
+        return img
+
+    def subset(self, i, j):
+        return self.copy()
+    
+    def concatenate(img1, img2):
+        assert img1.is_consistent() and img2.is_consistent()
+        assert img1.imagebag == img2.imagebag
+        assert img1.imageidx == img2.imageidx
+        assert img1.visible == img2.visible
+        assert img1.size == img2.size
+        img = Image(img1.imagebag, 
+                     img1.imageidx, 
+                     img1.visible, 
+                     img1.size)
+        return img
 
     def to_dict(self):
         img_dict = {"imagebag": self.imagebag,
@@ -280,6 +439,24 @@ class Filters:
         self.opacity = []
         self.saturate = []
         self.sepia = []
+        self.num_stimuli = -1
+
+    def is_consistent(self):
+        return True
+    
+    def duplicate(self, factor):
+        return
+    
+    def copy(self):
+        return Filters()
+    
+    def subset(self, i, j):
+        return self.copy()
+    
+    def concatenate(filter1, filter2):
+        assert filter1.is_consistent() and filter2.is_consistent()
+        filter = Filters()
+        return filter
 
     def to_dict(self):
         filter_dict = {"blur": self.blur,
@@ -307,48 +484,187 @@ class Filters:
         return filters
 
 
+class Animation:
+
+    animable_params = ["cam:pos", "dir_light:pos", "amb_light:pos",
+                       "obj0:size", "obj0:pos", "obj0:rot",
+                       "obj1:size", "obj1:pos", "obj1:rot",
+                       "obj2:size", "obj2:pos", "obj2:rot"]
+
+    def __init__(self, param, range):
+        self.param = param
+        assert param in Animation.animable_params, "Specified param not recognized, please try again!"
+        self.range = range
+        if param[-3:] == "pos" or param[-3:] == "rot":
+            self.num_stimuli = range.shape[1]
+        else: self.num_stimuli = range.shape[0]
+
+
 class Scenefile:
 
-    def __init__(self):
-        self.camera = None
-        self.dir_light = None
-        self.amb_light = None
-        self.obj0 = None
-        self.obj1 = None
-        self.obj2 = None
-        self.img = None
-        self.obj_filters = None
-        self.img_filters = None
-        self.duration = 0
-        return
+    def __init__(self, camera=None, dir_light=None, amb_light=None,
+                 obj0=None, obj1=None, obj2=None, img=None,
+                 obj_filters=None, img_filters=None, num_stimuli=0,
+                 duration=100):
+        self.camera = Camera() if (camera is None) else camera
+        self.dir_light = Light("DirectionalLight") if (dir_light is None) else dir_light
+        self.amb_light = Light("AmbientLight") if (amb_light is None) else amb_light
+        self.obj0 = Object(None) if (obj0 is None) else obj0
+        self.obj1 = Object(None) if (obj1 is None) else obj1
+        self.obj2 = Object(None) if (obj2 is None) else obj2
+        self.img = Image() if (img is None) else img
+        self.obj_filters = Filters() if (obj_filters is None) else obj_filters
+        self.img_filters = Filters() if (img_filters is None) else img_filters
+        self.num_stimuli = num_stimuli
+        self.duration = duration
+    
+    def get_elements(self):
+        return self.camera, self.dir_light, self.amb_light, \
+            self.obj0, self.obj1, self.obj2, \
+            self.img, self.obj_filters, self.img_filters
+
+    def is_consistent(self):
+        flag = True
+        for scene_element in self.get_elements():
+            elt_flag = (scene_element.num_stimuli == -1) or (scene_element.num_stimuli == self.num_stimuli)
+            flag = flag and elt_flag
+            if not flag: print(f"Consistency broken by {scene_element}!")
+        return flag
+    
+    def duplicate(self, factor):
+        self.camera.duplicate(factor)
+        self.dir_light.duplicate(factor)
+        self.amb_light.duplicate(factor)
+        self.obj0.duplicate(factor)
+        self.obj1.duplicate(factor)
+        self.obj2.duplicate(factor)
+        self.img.duplicate(factor)
+        self.obj_filters.duplicate(factor)
+        self.img_filters.duplicate(factor)
+        self.num_stimuli *= factor
+        assert self.is_consistent()
+
+    def copy(self):
+        cam = self.camera.copy()
+        dir_light = self.dir_light.copy()
+        amb_light = self.amb_light.copy()
+        obj0 = self.obj0.copy()
+        obj1 = self.obj1.copy()
+        obj2 = self.obj2.copy()
+        img = self.img.copy()
+        obj_filters = self.obj_filters.copy()
+        img_filters = self.img_filters.copy()
+        scenefile = Scenefile(cam, dir_light, amb_light,
+                                  obj0, obj1, obj2,
+                                  img, obj_filters, img_filters,
+                                  self.num_stimuli, self.duration)
+        return scenefile
+    
+    def subset(self, i, j):
+        assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
+        sub_cam = self.camera.subset(i, j)
+        sub_dir_light = self.dir_light.subset(i, j)
+        sub_amb_light = self.amb_light.subset(i, j)
+        sub_obj0 = self.obj0.subset(i, j)
+        sub_obj1 = self.obj1.subset(i, j)
+        sub_obj2 = self.obj2.subset(i, j)
+        sub_img = self.img.subset(i, j)
+        sub_obj_filters = self.obj_filters.subset(i, j)
+        sub_img_filters = self.img_filters.subset(i, j)
+        sub_scenefile = Scenefile(sub_cam, sub_dir_light, sub_amb_light,
+                                  sub_obj0, sub_obj1, sub_obj2,
+                                  sub_img, sub_obj_filters, sub_img_filters,
+                                  j - i + 1, self.duration)
+        assert sub_scenefile.is_consistent(), "Subset scenefile is not consistent!"
+        return sub_scenefile
+    
+    def concatenate(scenefile1, scenefile2):
+        assert scenefile1.is_consistent() and scenefile2.is_consistent()
+        assert scenefile1.duration == scenefile2.duration, "Durations must match for concatenation!"
+        cam = Camera.concatenate(scenefile1.camera, scenefile2.camera)
+        dir_light = Light.concatenate(scenefile1.dir_light, scenefile2.dir_light)
+        amb_light = Light.concatenate(scenefile1.amb_light, scenefile2.amb_light)
+        obj0 = Object.concatenate(scenefile1.obj0, scenefile2.obj0)
+        obj1 = Object.concatenate(scenefile1.obj1, scenefile2.obj1)
+        obj2 = Object.concatenate(scenefile1.obj2, scenefile2.obj2)
+        img = Image.concatenate(scenefile1.img, scenefile2.img)
+        obj_filters = Filters.concatenate(scenefile1.obj_filters, scenefile2.obj_filters)
+        img_filters = Filters.concatenate(scenefile1.img_filters, scenefile2.img_filters)
+        scenefile = Scenefile(cam, dir_light, amb_light,
+                              obj0, obj1, obj2,
+                              img, obj_filters, img_filters,
+                              scenefile1.num_stimuli + scenefile2.num_stimuli, 
+                              scenefile1.duration)
+        assert scenefile.is_consistent(), "Concatenated scenefile not consistent!"
+        return scenefile
 
     def from_json(json_path):
+
+        print(f"Loading scenefile from {json_path}!")
 
         scenefile = Scenefile()
 
         with open(json_path, "r") as sf:
             scene_dict = json.load(sf)
 
+        num_stimuli = 0
+
+        print("Loading camera!")
         cam_dict = scene_dict["CAMERAS"]
         scenefile.camera = Camera.from_dict(cam_dict["camera00"])
+        assert scenefile.camera.is_consistent(), "Camera not consistent!"
+        num_stimuli = max(num_stimuli, scenefile.camera.num_stimuli)
+        print(f"Camera loading done. Number of stimuli at {num_stimuli}.")
 
+        print("Loading lights!")
         light_dict = scene_dict["LIGHTS"]
         scenefile.dir_light = Light.from_dict(light_dict["light00"])
         scenefile.amb_light = Light.from_dict(light_dict["light01"])
+        assert scenefile.dir_light.is_consistent(), "Directional light not consistent!"
+        assert scenefile.amb_light.is_consistent(), "Ambient light not consistent!"
+        num_stimuli = max(num_stimuli, scenefile.dir_light.num_stimuli, scenefile.amb_light.num_stimuli)
+        print(f"Light loading done. Number of stimuli at {num_stimuli}.")
 
+        print("Loading objects!")
         obj_dict = scene_dict["OBJECTS"]
         scenefile.obj0 = Object.from_dict(obj_dict["obj0"])
         scenefile.obj1 = Object.from_dict(obj_dict["obj1"])
         scenefile.obj2 = Object.from_dict(obj_dict["obj2"])
+        assert scenefile.obj0.is_consistent(), "Object 0 not consistent!"
+        assert scenefile.obj1.is_consistent(), "Object 1 not consistent!"
+        assert scenefile.obj2.is_consistent(), "Object 2 not consistent!"
+        num_stimuli = max(num_stimuli, scenefile.obj0.num_stimuli,
+                          scenefile.obj1.num_stimuli, 
+                          scenefile.obj2.num_stimuli)
+        print(f"Object loading done. Number of stimuli at {num_stimuli}.")
 
+        print("Loading images!")
         img_dict = scene_dict["IMAGES"]
         scenefile.img = Image.from_dict(img_dict)
+        assert scenefile.img.is_consistent(), "Images not consistent!"
+        print(f"Images done. Number of stimuli at {num_stimuli}.")
 
+        print("Loading object filters!")
         obj_filter_dict = scene_dict["OBJECTFILTERS"]
         scenefile.obj_filters = Filters.from_dict(obj_filter_dict)
-
+        assert scenefile.obj_filters.is_consistent(), "Object filters not consistent!"
+        print(f"Object filter loading done. Number of stimuli at {num_stimuli}.")
+    
+        print("Loading image filters!")
         img_filter_dict = scene_dict["IMAGEFILTERS"]
         scenefile.img_filters = Filters.from_dict(img_filter_dict)
+        assert scenefile.img_filters.is_consistent(), "Image filters not consistent!"
+        print(f"Image filter loading done. Number of stimuli at {num_stimuli}.")
+
+        scenefile.num_stimuli = num_stimuli
+
+        for scene_element in scenefile.get_elements():
+            if scene_element.num_stimuli != -1:
+                if scene_element.num_stimuli == 1:
+                    scene_element.duplicate(num_stimuli)
+                else: assert scene_element.num_stimuli == scenefile.num_stimuli
+
+        assert scenefile.is_consistent(), "Scenefile not consistent! Please try again."
 
         scenefile.duration = scene_dict["durationMS"]
 
@@ -383,3 +699,61 @@ class Scenefile:
 
         with open(json_path, "w") as outfile:
             json.dump(scene_dict, outfile)
+
+    # TODO: Ensure num_stimuli is uniform before this is done
+    # TODO: Assign scene elements IDs 
+    def apply_anim(scene, animation, base):
+        assert scene.is_consistent()
+        add_scene = base.copy()
+        add_scene.duplicate(animation.num_stimuli)
+        ["cam:pos", "dir_light:pos", 
+                       "obj0:size", "obj0:pos", "obj0:rot",
+                       "obj1:size", "obj1:pos", "obj1:rot",
+                       "obj2:size", "obj2:pos", "obj2:rot"]
+        match animation.param:
+            case "cam:pos":
+                add_scene.camera.set_position(animation.range)
+            case "dir_light:pos":
+                add_scene.dir_light.set_position(animation.range)
+            case "amb_light:pos":
+                add_scene.amb_light.set_position(animation.range)
+            case "obj0:size":
+                add_scene.obj0.set_size(animation.range)
+            case "obj0:pos":
+                add_scene.obj0.set_position(animation.range)
+            case "obj0:rot":
+                add_scene.obj0.set_rotation(animation.range)
+            case "obj1:size":
+                add_scene.obj1.set_size(animation.range)
+            case "obj1:pos":
+                add_scene.obj1.set_position(animation.range)
+            case "obj1:rot":
+                add_scene.obj1.set_rotation(animation.range)
+            case "obj2:size":
+                add_scene.obj2.set_size(animation.range)
+            case "obj2:pos":
+                add_scene.obj2.set_position(animation.range)
+            case "obj2:rot":
+                add_scene.obj2.set_rotation(animation.range)
+            case _:
+                raise ValueError(f"Parameter not one of the following animatable params: {Animation.animable_params}. Please try again.")
+        return Scenefile.concatenate(scene, add_scene)
+
+
+class ScenefileSchema:
+
+    def __init__(self, base, animations=[]):
+        self.base = base
+        assert self.base.num_stimuli == 1
+        self.anims = animations
+        self.num_anims = len(self.anims)
+
+    def add_anim(self, animations):
+        self.anims += animations
+        self.num_anims += len(animations)
+
+    def generate_scenefile(self):
+        scenefile = self.base.copy()
+        for anim in self.anims:
+            scenefile = Scenefile.apply_anim(scenefile, anim, self.base)
+        return scenefile
