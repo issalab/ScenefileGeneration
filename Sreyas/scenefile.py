@@ -55,12 +55,12 @@ class Camera:
         return sub_cam
 
     def concatenate(cam1, cam2):
-        assert cam1.is_consistent() and cam2.is_consistent()
-        assert cam1.camera_type == cam2.camera_type
-        assert cam1.field_of_view == cam2.field_of_view
-        assert cam1.near == cam2.near
-        assert cam1.far == cam2.far
-        assert cam1.visible == cam2.visible
+        assert cam1.is_consistent() and cam2.is_consistent(), "Cameras must be consistent to concatenate!"
+        assert cam1.camera_type == cam2.camera_type, "Camera types must match!"
+        assert cam1.field_of_view == cam2.field_of_view, "Camera fov's must match!"
+        assert cam1.near == cam2.near, "Camera near's must match!"
+        assert cam1.far == cam2.far, "Camera far's must match!"
+        assert cam1.visible == cam2.visible, "Camera visibles must match!"
         cam = Camera(cam1.camera_type, 
                      cam1.field_of_view, 
                      cam1.near, cam1.far, 
@@ -151,7 +151,7 @@ class Light:
         assert light1.color == light2.color
         assert light1.intensity == light2.intensity
         assert light1.visible == light2.visible
-        light = Camera(light1.light_type, 
+        light = Light(light1.light_type, 
                      light1.color, 
                      light1.intensity, 
                      light1.visible)
@@ -527,7 +527,7 @@ class Scenefile:
         flag = True
         for scene_element in self.get_elements():
             elt_flag = (scene_element.num_stimuli == -1) or (scene_element.num_stimuli == self.num_stimuli)
-            flag = flag and elt_flag
+            flag = flag and elt_flag and scene_element.is_consistent()
             if not flag: print(f"Consistency broken by {scene_element}!")
         return flag
     
@@ -579,7 +579,7 @@ class Scenefile:
         return sub_scenefile
     
     def concatenate(scenefile1, scenefile2):
-        assert scenefile1.is_consistent() and scenefile2.is_consistent()
+        assert scenefile1.is_consistent() and scenefile2.is_consistent(), "Scenefiles must both be consistent to concatenate!"
         assert scenefile1.duration == scenefile2.duration, "Durations must match for concatenation!"
         cam = Camera.concatenate(scenefile1.camera, scenefile2.camera)
         dir_light = Light.concatenate(scenefile1.dir_light, scenefile2.dir_light)
@@ -703,7 +703,7 @@ class Scenefile:
     # TODO: Ensure num_stimuli is uniform before this is done
     # TODO: Assign scene elements IDs 
     def apply_anim(scene, animation, base):
-        assert scene.is_consistent()
+        assert scene.is_consistent(), "Scene must be consistent to animate!"
         add_scene = base.copy()
         add_scene.duplicate(animation.num_stimuli)
         ["cam:pos", "dir_light:pos", 
