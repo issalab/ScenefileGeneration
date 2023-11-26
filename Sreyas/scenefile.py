@@ -1,12 +1,10 @@
 import json
+import pprint
 import numpy as np
 
-#TODO: Add the ability to include arbitrarily many objects, cameras, lights
-#TODO: Add the ability to animate filter params, background indices.
-#TODO: Add flags to accurately maintain the number of stimuli within and across scene elements.
 #TODO: Abstract the logic of scene element into a separate class.
-#TODO: Include ability to save out scenefile to JSON.
-#TODO: Change np arrays to Python lists to enable animation of movies.
+#TODO: Add full list of animable params.
+#TODO: Support animation in parallel over multiple params.
 
 mkfiles_path = "gs://sandbox-ce2c5.appspot.com/mkturkfiles"
 
@@ -21,26 +19,28 @@ class Camera:
         self.near = near
         self.far = far
         self.num_stimuli = 1
-        self.position = np.zeros((3, self.num_stimuli))
-        self.target = np.zeros((3, self.num_stimuli))
+        self.position = [[0]*self.num_stimuli] * 3
+        self.target = [[0]*self.num_stimuli] * 3
         self.visible = visible
 
     def set_position(self, position):
-        assert len(position.shape) == 2 and position.shape[0] == 3, "Position must be of shape (3, num_stimuli)!"
+        assert len(position) == 3, "Position must be given as (x, y, z)!"
+        assert len(position[0]) == len(position[1]) == len(position[2]), "(x, y, z) stimulus lengths must match!"
         self.position = position
-        self.num_stimuli = max(self.num_stimuli, position.shape[1])
+        self.num_stimuli = max(self.num_stimuli, len(position[0]))
     
     def set_target(self, target):
-        assert len(target.shape) == 2 and target.shape[0] == 3, "Target must be of shape (3, num_stimuli)!"
+        assert len(target) == 3, "Target must be given as (x, y, z)!"
+        assert len(target[0]) == len(target[1]) == len(target[2]), "(x, y, z) stimulus lengths must match!"
         self.target = target
-        self.num_stimuli = max(self.num_stimuli, target.shape[1])
+        self.num_stimuli = max(self.num_stimuli, len(target[0]))
 
     def is_consistent(self):
-        return self.position.shape[1] == self.target.shape[1] == self.num_stimuli
+        return len(self.position[0]) == len(self.target[0]) == self.num_stimuli
     
     def duplicate(self, factor):
-        self.set_position(np.repeat(self.position, factor, axis=1))
-        self.set_target(np.repeat(self.target, factor, axis=1))
+        self.set_position([self.position[i]*factor for i in range(3)])
+        self.set_target([self.target[i]*factor for i in range(3)])
 
     def copy(self):
         cam = Camera(self.name, self.camera_type, self.field_of_view,
@@ -53,11 +53,11 @@ class Camera:
         assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
         sub_cam = Camera(self.name, self.camera_type, self.field_of_view,
                          self.near, self.far, self.visible)
-        sub_cam.set_position(self.position[:,i:j+1])
-        sub_cam.set_target(self.target[:,i:j+1])
+        sub_cam.set_position([self.position[k][i:j+1] for k in range(3)])
+        sub_cam.set_target([self.target[k][i:j+1] for k in range(3)])
         return sub_cam
 
-    def concatenate(cls, cam1, cam2):
+    def concatenate(cam1, cam2):
         assert cam1.is_consistent() and cam2.is_consistent(), "Cameras must be consistent to concatenate!"
         assert cam1.name == cam2.name, "Camera names must match!"
         assert cam1.camera_type == cam2.camera_type, "Camera types must match!"
@@ -69,8 +69,8 @@ class Camera:
                      cam1.field_of_view, 
                      cam1.near, cam1.far, 
                      cam1.visible)
-        cam.set_position(np.concatenate((cam1.position, cam2.position), axis=1))
-        cam.set_target(np.concatenate((cam1.target, cam2.target), axis=1))
+        cam.set_position([cam1.position[i] + cam2.position[i] for i in range(3)])
+        cam.set_target([cam1.target[i] + cam2.target[i] for i in range(3)])
         return cam
 
     def to_dict(self):
@@ -78,12 +78,12 @@ class Camera:
                     "fieldOfView": self.field_of_view,
                     "near": self.near,
                     "far": self.far,
-                    "position": {"x": self.position[0].tolist(),
-                                 "y": self.position[1].tolist(),
-                                 "z": self.position[2].tolist()},
-                    "targetTHREEJS": {"x": self.target[0].tolist(),
-                                 "y": self.target[1].tolist(),
-                                 "z": self.target[2].tolist()},
+                    "position": {"x": self.position[0],
+                                 "y": self.position[1],
+                                 "z": self.position[2]},
+                    "targetTHREEJS": {"x": self.target[0],
+                                 "y": self.target[1],
+                                 "z": self.target[2]},
                     "visible": [self.visible]}
         return cam_dict
     
@@ -92,7 +92,15 @@ class Camera:
         field_of_view = cam_dict["fieldOfView"]
         near = cam_dict["near"]
         far = cam_dict["far"]
-        visible = cam_dict["visible"][0]
+        if "visible" in cam_dict.keys():
+            if isinstance(cam_dict["visible"], int): 
+                visible = cam_dict["visible"]
+            else: 
+                assert len(cam_dict["visible"]) == 1, "Animating camera visible is not yet supported."
+                visible = cam_dict["visible"][0]
+        else:
+            print("Camera visible flag not found. Setting to 1.")
+            visible = 1
         pos = [cam_dict["position"]["x"],
                cam_dict["position"]["y"], 
                cam_dict["position"]["z"]]
@@ -105,14 +113,12 @@ class Camera:
         for i in range(3):
             if len(pos[i]) == 1: pos[i] = pos[i]*num_stimuli
             if len(tgt[i]) == 1: tgt[i] = tgt[i]*num_stimuli
-        position = np.array(pos)
-        target = np.array(tgt)
         camera = Camera(name, camera_type,
                         field_of_view,
                         near, far,
                         visible)
-        camera.set_position(position)
-        camera.set_target(target)
+        camera.set_position(pos)
+        camera.set_target(tgt)
         return camera
     
 class Light:
@@ -124,18 +130,19 @@ class Light:
         self.intensity = intensity
         self.visible = visible
         self.num_stimuli = 1
-        self.position = np.zeros((3, self.num_stimuli))
+        self.position = [[0]*self.num_stimuli] * 3
 
     def set_position(self, position):
-        assert len(position.shape) == 2 and position.shape[0] == 3, "Position must be of shape (3, num_stimuli)!"
+        assert len(position) == 3, "Position must be given as (x, y, z)!"
+        assert len(position[0]) == len(position[1]) == len(position[2]), "(x, y, z) stimulus lengths must match!"
         self.position = position
-        self.num_stimuli = max(self.num_stimuli, position.shape[1])
+        self.num_stimuli = max(self.num_stimuli, len(position[0]))
 
     def is_consistent(self):
-        return self.position.shape[1] == self.num_stimuli
+        return len(self.position[0]) == self.num_stimuli
     
     def duplicate(self, factor):
-        self.set_position(np.repeat(self.position, factor, axis=1))
+        self.set_position([self.position[i]*factor for i in range(3)])
 
     def copy(self):
         light = Light(self.name, self.light_type, self.color,
@@ -147,7 +154,7 @@ class Light:
         assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
         sub_light = Light(self.name, self.light_type, self.color,
                          self.intensity, self.visible)
-        sub_light.set_position(self.position[:,i:j+1])
+        sub_light.set_position([self.position[k][i:j+1] for k in range(3)])
         return sub_light
 
     def concatenate(light1, light2):
@@ -161,24 +168,40 @@ class Light:
                      light1.color, 
                      light1.intensity, 
                      light1.visible)
-        light.set_position(np.concatenate((light1.position, light2.position), axis=1))
+        light.set_position([light1.position[i] + light2.position[i] for i in range(3)])
         return light
 
     def to_dict(self):
         light_dict = {"type": self.light_type,
                     "color": self.color,
                     "intensity": [self.intensity],
-                    "position": {"x": self.position[0].tolist(),
-                                 "y": self.position[1].tolist(),
-                                 "z": self.position[2].tolist()},
+                    "position": {"x": self.position[0],
+                                 "y": self.position[1],
+                                 "z": self.position[2]},
                     "visible": [self.visible]}
         return light_dict
     
     def from_dict(light_dict, name):
         light_type = light_dict["type"]
         color = light_dict["color"]
-        intensity = light_dict["intensity"][0]
-        visible = light_dict["visible"][0]
+        if "intensity" in light_dict.keys():
+            if isinstance(light_dict["intensity"], int): 
+                intensity = light_dict["intensity"]
+            else: 
+                assert len(light_dict["intensity"]) == 1, "Animating light intensity is not yet supported."
+                intensity = light_dict["intensity"][0]
+        else:
+            print("Light intensity not specified. Setting to 5.")
+            intensity = 5
+        if "visible" in light_dict.keys():
+            if isinstance(light_dict["visible"], int): 
+                visible = light_dict["visible"]
+            else: 
+                assert len(light_dict["visible"]) == 1, "Animating light visible is not yet supported."
+                visible = light_dict["visible"][0]
+        else:
+            print("Light visibility not specified. Setting to 1.")
+            visible = 1
         pos = [light_dict["position"]["x"],
                light_dict["position"]["y"], 
                light_dict["position"]["z"]]
@@ -186,9 +209,8 @@ class Light:
         num_stimuli = num_pos_stimuli
         for i in range(3):
             if len(pos[i]) == 1: pos[i] = pos[i]*num_stimuli
-        position = np.array(pos)
         light = Light(name, light_type, color, intensity, visible)
-        light.set_position(position)
+        light.set_position(pos)
         return light
     
 class Object:
@@ -216,44 +238,46 @@ class Object:
         self.material_transparent = material_transparent
 
         self.num_stimuli = 1
-        self.size = np.zeros(self.num_stimuli)
-        self.position = np.zeros((3, self.num_stimuli))
-        self.rotation = np.zeros((3, self.num_stimuli))
-        self.visible = np.zeros(self.num_stimuli, dtype="int")
-        self.target = np.zeros(self.num_stimuli, dtype="int")
+        self.size = [0]*self.num_stimuli
+        self.position = [[0]*self.num_stimuli] * 3
+        self.rotation = [[0]*self.num_stimuli] * 3
+        self.visible = [0]*self.num_stimuli
+        self.target = [0]*self.num_stimuli
 
-    def set_size(self, sizes):
-        self.size = sizes
-        self.num_stimuli = max(self.num_stimuli, sizes.shape[0])
+    def set_size(self, size):
+        self.size = size
+        self.num_stimuli = max(self.num_stimuli, len(size))
 
     def set_position(self, position):
-        assert len(position.shape) == 2 and position.shape[0] == 3, "Position must be of shape (3, num_stimuli)!"
+        assert len(position) == 3, "Position must be given as (x, y, z)!"
+        assert len(position[0]) == len(position[1]) == len(position[2]), "(x, y, z) stimulus lengths must match!"
         self.position = position
-        self.num_stimuli = max(self.num_stimuli, position.shape[1])
+        self.num_stimuli = max(self.num_stimuli, len(position[0]))
 
     def set_rotation(self, rotation):
-        assert len(rotation.shape) == 2 and rotation.shape[0] == 3, "Rotation must be of shape (3, num_stimuli)!"
+        assert len(rotation) == 3, "Rotation must be given as (x, y, z)!"
+        assert len(rotation[0]) == len(rotation[1]) == len(rotation[2]), "(x, y, z) stimulus lengths must match!"
         self.rotation = rotation
-        self.num_stimuli = max(self.num_stimuli, rotation.shape[1])
+        self.num_stimuli = max(self.num_stimuli, len(rotation[0]))
 
-    def set_visible(self, visibles):
-        self.visible = visibles
-        self.num_stimuli = max(self.num_stimuli, visibles.shape[0])
+    def set_visible(self, visible):
+        self.visible = visible
+        self.num_stimuli = max(self.num_stimuli, len(visible))
 
-    def set_target(self, targets):
-        self.target = targets
-        self.num_stimuli = max(self.num_stimuli, targets.shape[0])
+    def set_target(self, target):
+        self.target = target
+        self.num_stimuli = max(self.num_stimuli, len(target))
 
     def is_consistent(self):
-        return self.position.shape[1] == self.rotation.shape[1] \
-            == self.visible.shape[0] == self.target.shape[0]
+        return len(self.size) == len(self.position[0]) == len(self.rotation[0]) \
+            == len(self.visible) == len(self.target) == self.num_stimuli
     
     def duplicate(self, factor):
-        self.set_size(np.repeat(self.size, factor))
-        self.set_position(np.repeat(self.position, factor, axis=1))
-        self.set_rotation(np.repeat(self.rotation, factor, axis=1))
-        self.set_visible(np.repeat(self.visible, factor))
-        self.set_target(np.repeat(self.target, factor))
+        self.set_size(self.size*factor)
+        self.set_position([self.position[i]*factor for i in range(3)])
+        self.set_rotation([self.rotation[i]*factor for i in range(3)])
+        self.set_visible(self.visible*factor)
+        self.set_target(self.target*factor)
 
     def copy(self):
         obj = Object(self.name, self.meshpath, self.objectdoc,
@@ -276,8 +300,8 @@ class Object:
                          self.material_roughness, self.material_reflectivity,
                          self.material_opacity, self.material_transparent)
         sub_obj.set_size(self.size[i:j+1])
-        sub_obj.set_position(self.position[:,i:j+1])
-        sub_obj.set_rotation(self.rotation[:,i:j+1])
+        sub_obj.set_position([self.position[k][i:j+1] for k in range(3)])
+        sub_obj.set_rotation([self.rotation[k][i:j+1] for k in range(3)])
         sub_obj.set_visible(self.visible[i:j+1])
         sub_obj.set_target(self.target[i:j+1])
         return sub_obj
@@ -302,11 +326,12 @@ class Object:
                      o1.material_reflectivity,
                      o1.material_opacity,
                      o1.material_transparent)
-        obj.set_size(np.concatenate((o1.size, o2.size)))
-        obj.set_position(np.concatenate((o1.position, o2.position), axis=1))
-        obj.set_rotation(np.concatenate((o1.rotation, o2.rotation), axis=1))
-        obj.set_visible(np.concatenate((o1.visible, o2.visible)))
-        obj.set_target(np.concatenate((o1.target, o2.target)))
+        obj.set_size(o1.size + o2.size)
+        obj.set_position([o1.position[i] + o2.position[i] for i in range(3)])
+        obj.set_rotation([o1.rotation[i] + o2.rotation[i] for i in range(3)])
+        obj.set_visible(o1.visible + o2.visible)
+        obj.set_target(o1.target + o2.target)
+        assert obj.num_stimuli == o1.num_stimuli + o2.num_stimuli, "Concatenation must sum object stimulus counts."
         return obj
 
     def to_dict(self):
@@ -322,15 +347,15 @@ class Object:
                         "opacity": [self.material_opacity],
                         "transparent": self.material_transparent
                     },
-                    "sizeTHREEJS": self.size.tolist(),
-                    "positionTHREEJS": {"x": self.position[0].tolist(),
-                                 "y": self.position[1].tolist(),
-                                 "z": self.position[2].tolist()},
-                    "rotationDegrees": {"x": self.rotation[0].tolist(),
-                                 "y": self.rotation[1].tolist(),
-                                 "z": self.rotation[2].tolist()},
-                    "visible": self.visible.tolist(),
-                    "target": self.target.tolist()}
+                    "sizeTHREEJS": self.size,
+                    "positionTHREEJS": {"x": self.position[0],
+                                 "y": self.position[1],
+                                 "z": self.position[2]},
+                    "rotationDegrees": {"x": self.rotation[0],
+                                 "y": self.rotation[1],
+                                 "z": self.rotation[2]},
+                    "visible": self.visible,
+                    "target": self.target}
         return obj_dict
     
     def from_dict(obj_dict, name):
@@ -342,7 +367,15 @@ class Object:
         material_metalness = obj_dict["material"]["metalness"]
         material_roughness = obj_dict["material"]["roughness"]
         material_reflectivity = obj_dict["material"]["reflectivity"]
-        material_opacity = obj_dict["material"]["opacity"][0]
+        if "opacity" in obj_dict["material"].keys():
+            if isinstance(obj_dict["material"]["opacity"], int) or isinstance(obj_dict["material"]["opacity"], float): 
+                material_opacity = obj_dict["material"]["opacity"]
+            else: 
+                assert len(obj_dict["material"]["opacity"]) == 1, "Animating object material opacity is not yet supported."
+                material_opacity = obj_dict["material"]["opacity"][0]
+        else:
+            print(f"Material opacity for object {name} not specified. Setting to 1.")
+            material_opacity = 1
         material_transparent = obj_dict["material"]["transparent"]
         sizes = obj_dict["sizeTHREEJS"]
         positions = [obj_dict["positionTHREEJS"]["x"],
@@ -351,8 +384,22 @@ class Object:
         rotations = [obj_dict["rotationDegrees"]["x"],
                      obj_dict["rotationDegrees"]["y"],
                      obj_dict["rotationDegrees"]["z"]]
-        visibles = obj_dict["visible"]
-        targets = obj_dict["target"]
+        if "visible" in obj_dict.keys():
+            if isinstance(obj_dict["visible"], int): 
+                visibles = [obj_dict["visible"]]
+            else: 
+                visibles = obj_dict["visible"]
+        else: 
+            print(f"Visibility for object {name} not specified. Setting to [1].")
+            visibles = [1]
+        if "target" in obj_dict.keys():
+            if isinstance(obj_dict["target"], int): 
+                targets = [obj_dict["target"]]
+            else: 
+                targets = obj_dict["target"]
+        else:
+            print(f"Target status for object {name} not found. Setting to [1].")
+            targets = [1]
         num_size_stimuli = len(sizes)
         num_pos_stimuli = max([len(positions[i]) for i in range(3)])
         num_rot_stimuli = max([len(rotations[i]) for i in range(3)])
@@ -366,11 +413,6 @@ class Object:
             if len(rotations[i]) == 1: rotations[i] = rotations[i]*num_stimuli
         if num_vis_stimuli == 1: visibles = visibles * num_stimuli
         if num_tgt_stimuli == 1: targets = targets * num_stimuli
-        sizes = np.array(sizes)
-        positions = np.array(positions)
-        rotations = np.array(rotations)
-        visibles = np.array(visibles)
-        targets = np.array(targets)
         object = Object(name, meshpath, objectdoc, texture,
                         material_type, material_color,
                         material_metalness, material_roughness,
@@ -385,91 +427,205 @@ class Object:
 
 class Image:
 
-    def __init__(self, 
+    def __init__(self, name="img",
                  imagebag="/mkturkfiles/assets/polyhaven/",
-                 imageidx=5,
-                 visible=1,
                  img_size=10):
+        self.name = name
         self.imagebag = imagebag
-        self.imageidx = imageidx
-        self.visible = visible
+        self.num_stimuli = 1
+        self.imageidx = [0]*self.num_stimuli
+        self.visible = [1]*self.num_stimuli
         self.size = img_size
-        self.num_stimuli = -1
+
+    def set_imageidx(self, imageidx):
+        self.imageidx = imageidx
+        self.num_stimuli = max(self.num_stimuli, len(imageidx))
+    
+    def set_visible(self, visible):
+        self.visible = visible
+        self.num_stimuli = max(self.num_stimuli, len(visible))
 
     def is_consistent(self):
-        return True
+        return len(self.imageidx) == len(self.visible) == self.num_stimuli
     
     def duplicate(self, factor):
-        return
+        self.set_imageidx(self.imageidx*factor)
+        self.set_visible(self.visible*factor)
 
     def copy(self):
-        img = Image(self.imagebag, self.imageidx, self.visible, self.size)
+        img = Image(self.name, self.imagebag, self.size)
+        imageidx = self.imageidx.copy()
+        visible = self.visible.copy()
+        img.set_imageidx(imageidx)
+        img.set_visible(visible)
         return img
 
     def subset(self, i, j):
-        return self.copy()
+        assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
+        sub_img = Image(self.name, self.imagebag, self.size)
+        sub_img.set_imageidx(self.imageidx[i:j+1])
+        sub_img.set_visible(self.visible[i:j+1])
+        return sub_img
     
     def concatenate(img1, img2):
         assert img1.is_consistent() and img2.is_consistent(), "Images must be consistent to concatenate!"
+        assert img1.name == img2.name, "Image names must match!"
         assert img1.imagebag == img2.imagebag, "Imagebags must match!"
-        assert img1.imageidx == img2.imageidx, "Image indices must match!"
-        assert img1.visible == img2.visible, "Image visibles must match!"
         assert img1.size == img2.size, "Image sizes must match!"
-        img = Image(img1.imagebag, 
-                     img1.imageidx, 
-                     img1.visible, 
-                     img1.size)
+        img = Image(img1.name, img1.imagebag, img1.size)
+        img.set_imageidx(img1.imageidx + img2.imageidx)
+        img.set_visible(img1.visible + img2.visible)
         return img
 
     def to_dict(self):
         img_dict = {"imagebag": self.imagebag,
-                    "imageidx": [self.imageidx],
-                    "visible": [self.visible],
-                    "sizeTHREEJS": [self.size]}
+                    "imageidx": self.imageidx,
+                    "visible": self.visible,
+                    "sizeTHREEJS": self.size}
         return img_dict
-    
-    def from_dict(img_dict):
+
+    def from_dict(img_dict, name):
         imagebag = img_dict["imagebag"]
-        imageidx = img_dict["imageidx"][0]
-        if "visible" in img_dict.keys() and len(img_dict["visible"]) > 0:
-            visible = img_dict["visible"][0]
+        if "imageidx" in img_dict.keys():
+            if isinstance(img_dict["imageidx"], int):
+                imageidx = [img_dict["imageidx"]]
+            else:
+                assert len(img_dict["imageidx"]) > 0, "List of background indices is empty! Please set the background to some default value, and turn off its visibility." 
+                imageidx = img_dict["imageidx"] 
         else:
-            print("Adding visible flag to background. Setting to 1.")
-            visible = 1
-        img_size = img_dict["sizeTHREEJS"][0]
-        img = Image(imagebag, imageidx,
-                       visible, img_size)
+            assert "Background indices must be specified! Please try again."
+        if "visible" in img_dict.keys():
+            if isinstance(img_dict["visible"], int): 
+                visible = [img_dict["visible"]]
+            else: 
+                visible = img_dict["visible"]
+        else:
+            print("Background visibility not specified. Setting to [1].")
+            visible = [1]
+        num_stimuli = max(len(imageidx), len(visible))
+        if len(imageidx) == 1: imageidx = imageidx * num_stimuli
+        if len(visible) == 1: visible = visible * num_stimuli
+        img_size = img_dict["sizeTHREEJS"][0] #TODO: Add similar handling for img_size, and for other params across scenefile
+        img = Image(name, imagebag, img_size)
+        img.set_imageidx(imageidx)
+        img.set_visible(visible)
         return img
 
 class Filters:
 
-    def __init__(self):
-        self.blur = []
-        self.brightness = []
-        self.contrast = []
-        self.grayscale = []
-        self.huerotate = []
-        self.invert = []
-        self.opacity = []
-        self.saturate = []
-        self.sepia = []
-        self.num_stimuli = -1
+    def __init__(self, name="filters", default_blur=0, default_brightness=1, 
+                 default_contrast=1, default_grayscale=0,
+                 default_huerotate=0, default_invert=0, default_opacity=1, 
+                 default_saturate=1, default_sepia=0):
+        self.name = name
+        self.num_stimuli = 1
+        self.blur = [default_blur]
+        self.brightness = [default_brightness]
+        self.contrast = [default_contrast]
+        self.grayscale = [default_grayscale]
+        self.huerotate = [default_huerotate]
+        self.invert = [default_invert]
+        self.opacity = [default_opacity]
+        self.saturate = [default_saturate]
+        self.sepia = [default_sepia]
+    
+    def get_filter_maps(self):
+        return (self.blur, self.brightness, self.contrast, self.grayscale,
+                self.huerotate, self.invert, self.opacity,
+                self.saturate, self.sepia)
+
+    def set_blur(self, blur):
+        self.blur = blur
+        self.num_stimuli = max(self.num_stimuli, len(blur))
+
+    def set_brightness(self, brightness):
+        self.brightness = brightness
+        self.num_stimuli = max(self.num_stimuli, len(brightness))
+
+    def set_contrast(self, contrast):
+        self.contrast = contrast
+        self.num_stimuli = max(self.num_stimuli, len(contrast))
+
+    def set_grayscale(self, grayscale):
+        self.grayscale = grayscale
+        self.num_stimuli = max(self.num_stimuli, len(grayscale))
+
+    def set_huerotate(self, huerotate):
+        self.huerotate = huerotate
+        self.num_stimuli = max(self.num_stimuli, len(huerotate))
+
+    def set_invert(self, invert):
+        self.invert = invert
+        self.num_stimuli = max(self.num_stimuli, len(invert))
+
+    def set_opacity(self, opacity):
+        self.opacity = opacity
+        self.num_stimuli = max(self.num_stimuli, len(opacity))
+
+    def set_saturate(self, saturate):
+        self.saturate = saturate
+        self.num_stimuli = max(self.num_stimuli, len(saturate))
+
+    def set_sepia(self, sepia):
+        self.sepia = sepia
+        self.num_stimuli = max(self.num_stimuli, len(sepia))
 
     def is_consistent(self):
-        return True
+        return len(self.blur) == len(self.brightness) == len(self.contrast) \
+            == len(self.grayscale) == len(self.huerotate) == len(self.invert) \
+            == len(self.opacity) == len(self.saturate) == len(self.sepia) == self.num_stimuli
     
     def duplicate(self, factor):
-        return
+        self.set_blur(self.blur * factor)
+        self.set_brightness(self.brightness * factor)
+        self.set_contrast(self.contrast * factor)
+        self.set_grayscale(self.grayscale * factor)
+        self.set_huerotate(self.huerotate * factor)
+        self.set_invert(self.invert * factor)
+        self.set_opacity(self.opacity * factor)
+        self.set_saturate(self.saturate * factor)
+        self.set_sepia(self.sepia * factor)
     
     def copy(self):
-        return Filters()
+        filters = Filters(self.name)
+        filters.set_blur(self.blur.copy())
+        filters.set_brightness(self.brightness.copy())
+        filters.set_contrast(self.contrast.copy())
+        filters.set_grayscale(self.grayscale.copy())
+        filters.set_huerotate(self.huerotate.copy())
+        filters.set_invert(self.invert.copy())
+        filters.set_opacity(self.opacity.copy())
+        filters.set_saturate(self.saturate.copy())
+        filters.set_sepia(self.sepia.copy())
+        return filters
     
     def subset(self, i, j):
-        return self.copy()
+        assert i <= j and i >= 0 and j <= self.num_stimuli, "Improper indices for subset, please try again!"
+        sub_filters = Filters(self.name)
+        sub_filters.set_blur(self.blur[i:j+1])
+        sub_filters.set_brightness(self.contrast[i:j+1])
+        sub_filters.set_contrast(self.contrast[i:j+1])
+        sub_filters.set_grayscale(self.grayscale[i:j+1])
+        sub_filters.set_huerotate(self.huerotate[i:j+1])
+        sub_filters.set_invert(self.invert[i:j+1])
+        sub_filters.set_opacity(self.opacity[i:j+1])
+        sub_filters.set_saturate(self.saturate[i:j+1])
+        sub_filters.set_sepia(self.sepia[i:j+1])
+        return sub_filters
     
     def concatenate(filter1, filter2):
         assert filter1.is_consistent() and filter2.is_consistent(), "Filters must be consistent to concatenate!"
-        filter = Filters()
+        assert filter1.name == filter2.name, "Filter names must match to concatenate!"
+        filter = Filters(filter1.name)
+        filter.set_blur(filter1.blur + filter2.blur)
+        filter.set_brightness(filter1.brightness + filter2.brightness)
+        filter.set_contrast(filter1.contrast + filter2.contrast)
+        filter.set_grayscale(filter1.grayscale + filter2.grayscale)
+        filter.set_huerotate(filter1.huerotate + filter2.huerotate)
+        filter.set_opacity(filter1.opacity + filter2.opacity)
+        filter.set_invert(filter1.invert + filter2.invert)
+        filter.set_saturate(filter1.saturate + filter2.saturate)
+        filter.set_sepia(filter1.sepia + filter2.sepia)
         return filter
 
     def to_dict(self):
@@ -484,7 +640,7 @@ class Filters:
                        "sepia": self.sepia}
         return filter_dict
     
-    def from_dict(filter_dict):
+    def from_dict(filter_dict, name):
         blur = filter_dict["blur"]
         brightness = filter_dict["brightness"]
         contrast = filter_dict["contrast"]
@@ -494,22 +650,29 @@ class Filters:
         opacity = filter_dict["opacity"]
         saturate = filter_dict["saturate"]
         sepia = filter_dict["sepia"]
-        filters = Filters()
+        filters = Filters(name)
+        if len(blur) != 0: filters.set_blur(blur)
+        if len(brightness) != 0: filters.set_brightness(brightness)
+        if len(contrast) != 0: filters.set_contrast(contrast)
+        if len(grayscale) != 0: filters.set_grayscale(grayscale)
+        if len(huerotate) != 0: filters.set_huerotate(huerotate)
+        if len(invert) != 0: filters.set_invert(invert)
+        if len(opacity) != 0: filters.set_opacity(opacity)
+        if len(saturate) != 0: filters.set_saturate(saturate)
+        if len(sepia) != 0: filters.set_sepia(sepia)
+        num_stimuli = max(len(filters.blur), len(filters.brightness), len(filters.contrast), 
+                          len(filters.grayscale), len(filters.huerotate), len(filters.invert), 
+                          len(filters.opacity), len(filters.saturate), len(filters.sepia))
+        if len(filters.blur) == 1: filters.blur = filters.blur * num_stimuli
+        if len(filters.brightness) == 1: filters.brightness = filters.brightness * num_stimuli
+        if len(filters.contrast) == 1: filters.contrast = filters.contrast * num_stimuli
+        if len(filters.grayscale) == 1: filters.grayscale = filters.grayscale * num_stimuli
+        if len(filters.huerotate) == 1: filters.huerotate = filters.huerotate * num_stimuli
+        if len(filters.invert) == 1: filters.invert = filters.invert * num_stimuli
+        if len(filters.opacity) == 1: filters.opacity = filters.opacity * num_stimuli
+        if len(filters.saturate) == 1: filters.saturate = filters.saturate * num_stimuli
+        if len(filters.sepia) == 1: filters.sepia = filters.sepia * num_stimuli
         return filters
-
-
-class Animation:
-
-    animable_params = ["cam:pos", "light:pos", "obj:size", "obj:pos", "obj:rot"]
-
-    def __init__(self, param, range, element_name):
-        self.param = param
-        assert param in Animation.animable_params, "Specified param not recognized, please try again!"
-        self.range = range
-        if param[-3:] == "pos" or param[-3:] == "rot":
-            self.num_stimuli = range.shape[1]
-        else: self.num_stimuli = range.shape[0]
-        self.element_name = element_name
 
 
 class Scenefile:
@@ -527,6 +690,10 @@ class Scenefile:
     def get_elements(self):
         return *self.cameras, *self.lights, *self.objects, self.img, self.obj_filters, self.img_filters
     
+    def get_element_names(self):
+        return [[cam.name for cam in self.cameras], [light.name for light in self.lights],
+                [obj.name for obj in self.objects], self.img.name, self.obj_filters.name, self.img_filters.name]
+    
     def get_camera(self, cam_name):
         for cam in self.cameras:
             if cam.name == cam_name: return cam
@@ -541,22 +708,37 @@ class Scenefile:
         for obj in self.objects:
             if obj.name == obj_name: return obj
         return None
+    
+    def get_image(self, img_name="img"):
+        assert img_name == "img", "Each Scenefile contains only one Image, which must have name \'img\'."
+        return self.img
+    
+    def get_object_filters(self):
+        return self.obj_filters
+    
+    def get_image_filters(self):
+        return self.img_filters
+    
+    def get_filters(self, filters_name):
+        assert filters_name in ["obj_filters", "img_filters"], "Each Scenefile only contains two Filters with names \'obj_filters\' and \'img_filters\'."
+        if filters_name == "obj_filters":
+            return self.get_object_filters()
+        if filters_name == "img_filters":
+            return self.get_image_filters()
 
     def is_consistent(self):
         print("Initiating scenefile consistency check.")
         flag = True
         names = []
-        print("Names", names)
         for scene_element in self.get_elements():
-            if scene_element.num_stimuli != -1:
-                print("elt name", scene_element.name)
-            name_flag = (scene_element.num_stimuli == -1 or (not (scene_element.name in names)))
-            if not name_flag: print("Name", names)
-            if scene_element.num_stimuli != -1 and name_flag: names.append(scene_element.name)
-            elt_flag = (scene_element.num_stimuli == -1) or (scene_element.num_stimuli == self.num_stimuli)
-            flag = flag and elt_flag and name_flag and scene_element.is_consistent()
-            if not flag: print(f"Consistency broken by {scene_element}!", name_flag, elt_flag, flag)
-        names = []
+            name_flag = not (scene_element.name in names)
+            if name_flag: names.append(scene_element.name)
+            else: print("Name", scene_element.name)
+            elt_flag = scene_element.num_stimuli == self.num_stimuli
+            new_flag = elt_flag and name_flag and scene_element.is_consistent()
+            flag = flag and new_flag
+            if not new_flag: print(f"Consistency broken by {scene_element}!", name_flag, elt_flag, scene_element.is_consistent())
+        if flag: print("Consistency check passed!")
         return flag
     
     def duplicate(self, factor):
@@ -573,7 +755,6 @@ class Scenefile:
         assert self.is_consistent()
 
     def copy(self):
-        cam = self.camera.copy()
         cams = [cam.copy() for cam in self.cameras]
         lights = [light.copy() for light in self.lights]
         objects = [obj.copy() for obj in self.objects]
@@ -657,7 +838,7 @@ class Scenefile:
         assert scenefile.is_consistent(), "Concatenated scenefile not consistent!"
         return scenefile
 
-    def from_json(json_path):
+    def from_json(json_path, check_consistency=True):
 
         scenefile = Scenefile()
 
@@ -695,38 +876,39 @@ class Scenefile:
 
         print("Loading images!")
         img_dict = scene_dict["IMAGES"]
-        scenefile.img = Image.from_dict(img_dict)
+        scenefile.img = Image.from_dict(img_dict, "img")
         assert scenefile.img.is_consistent(), "Images not consistent!"
         print(f"Images done. Number of stimuli at {num_stimuli}.")
 
         print("Loading object filters!")
         obj_filter_dict = scene_dict["OBJECTFILTERS"]
-        scenefile.obj_filters = Filters.from_dict(obj_filter_dict)
+        scenefile.obj_filters = Filters.from_dict(obj_filter_dict, "obj_filters")
         assert scenefile.obj_filters.is_consistent(), "Object filters not consistent!"
         print(f"Object filter loading done. Number of stimuli at {num_stimuli}.")
     
         print("Loading image filters!")
         img_filter_dict = scene_dict["IMAGEFILTERS"]
-        scenefile.img_filters = Filters.from_dict(img_filter_dict)
+        scenefile.img_filters = Filters.from_dict(img_filter_dict, "img_filters")
         assert scenefile.img_filters.is_consistent(), "Image filters not consistent!"
         print(f"Image filter loading done. Number of stimuli at {num_stimuli}.")
 
         scenefile.num_stimuli = num_stimuli
 
         for scene_element in scenefile.get_elements():
-            if scene_element.num_stimuli != -1:
-                if scene_element.num_stimuli == 1:
-                    scene_element.duplicate(num_stimuli)
-                else: assert scene_element.num_stimuli == scenefile.num_stimuli
+            if scene_element.num_stimuli == 1:
+                scene_element.duplicate(num_stimuli)
+            if check_consistency:
+                assert scene_element.num_stimuli == scenefile.num_stimuli, "Scene elements should have either one or all stimuli, nothing in between."
 
         print(scenefile.get_elements())
-        assert scenefile.is_consistent(), "Scenefile not consistent! Please try again."
+        if check_consistency:
+            assert scenefile.is_consistent(), "Scenefile not consistent! Please try again."
 
         scenefile.duration = scene_dict["durationMS"]
 
         return scenefile
 
-    def to_json(self, json_path):
+    def to_json(self, json_path, indent=1):
 
         scene_dict = {"CAMERAS": None, "LIGHTS": None, 
                       "OBJECTS": None, "IMAGES": None,
@@ -750,52 +932,86 @@ class Scenefile:
         scene_dict["durationMS"] = self.duration
 
         with open(json_path, "w") as outfile:
-            json.dump(scene_dict, outfile)
+            json.dump(scene_dict, outfile, indent=indent)
 
-    def apply_anim(scene, animation, base):
+    def apply_animation(scene, animation, base):
+        print("Applying animation", animation, ".")
         assert scene.is_consistent(), "Scene must be consistent to animate!"
         add_scene = base.copy()
-        add_scene.duplicate(animation.num_stimuli)
-        match animation.param:
-            case "cam:pos":
-                cam = add_scene.get_camera(animation.element_name)
-                assert cam is not None, "Camera not found!"
-                cam.set_position(animation.range)
-            case "light:pos":
-                light = add_scene.get_light(animation.element_name)
-                assert light is not None, "Light not found!"
-                light.set_position(animation.range)
-            case "obj:size":
-                obj = add_scene.get_object(animation.element_name)
-                assert obj is not None, "Object not found!"
-                obj.set_size(animation.range)
-            case "obj:pos":
-                obj = add_scene.get_object(animation.element_name)
-                assert obj is not None, "Object not found!"
-                obj.set_position(animation.range)
-            case "obj:rot":
-                obj = add_scene.get_object(animation.element_name)
-                assert obj is not None, "Object not found!"
-                obj.set_rotation(animation.range)
-            case _:
-                raise ValueError(f"Parameter not one of the following animatable params: {Animation.animable_params}. Please try again.")
+        if isinstance(animation, Animation):
+            animation = [animation]
+        add_scene.duplicate(animation[0].num_stimuli)
+        for anim in animation:
+            anim_element = Animation.animations[anim.param][0](add_scene, anim.element_name)
+            Animation.animations[anim.param][1](anim_element, anim.range)
+        # pprint.pprint(anim_element.to_dict())
         return Scenefile.concatenate(scene, add_scene)
+        
+
+class Animation:
+
+    animations = {"cam:pos" : (Scenefile.get_camera, Camera.set_position), 
+                  "cam:tgt" : (Scenefile.get_camera, Camera.set_target), 
+                  "light:pos" : (Scenefile.get_light, Light.set_position), 
+                  "obj:size" : (Scenefile.get_object, Object.set_size), 
+                  "obj:pos" : (Scenefile.get_object, Object.set_position), 
+                  "obj:rot" : (Scenefile.get_object, Object.set_rotation), 
+                  "obj:vis" : (Scenefile.get_object, Object.set_visible), 
+                  "obj:tgt" : (Scenefile.get_object, Object.set_target), 
+                  "img:idx" : (Scenefile.get_image, Image.set_imageidx), 
+                  "img:vis" : (Scenefile.get_image, Image.set_visible), 
+                  "filt:blu" : (Scenefile.get_filters, Filters.set_blur), 
+                  "filt:bri" : (Scenefile.get_filters, Filters.set_brightness), 
+                  "filt:con" : (Scenefile.get_filters, Filters.set_contrast),
+                  "filt:gra" : (Scenefile.get_filters, Filters.set_grayscale), 
+                  "filt:hue" : (Scenefile.get_filters, Filters.set_huerotate), 
+                  "filt:inv" : (Scenefile.get_filters, Filters.set_invert),
+                  "filt:opa" : (Scenefile.get_filters, Filters.set_opacity), 
+                  "filt:sat" : (Scenefile.get_filters, Filters.set_saturate), 
+                  "filt:sep" : (Scenefile.get_filters, Filters.set_sepia)}
+    
+    xyz_params = ["cam:pos", "cam:tgt", "light:pos", "obj:pos", "obj:rot"]
+
+    def __init__(self, param, range, element_name):
+        self.param = param
+        assert param in Animation.animations.keys(), "Specified param not recognized, please try again!"
+        self.range = range
+        if param in Animation.xyz_params:
+            assert len(self.range[0]) == len(self.range[1]) == len(self.range[2]), "(x, y, z) animation lengths must match!"
+            self.num_stimuli = len(self.range[0])
+        else: self.num_stimuli = len(self.range)
+        self.element_name = element_name
 
 
 class ScenefileSchema:
 
-    def __init__(self, base, animations=[]):
+    def __init__(self, base):
         self.base = base
-        assert self.base.num_stimuli == 1
-        self.anims = animations
-        self.num_anims = len(self.anims)
+        assert self.base.num_stimuli == 1, "Base must be a single-stimulus scenefile!"
+        self.animations = []
+        self.num_animations = 1
 
-    def add_anim(self, animations):
-        self.anims += animations
-        self.num_anims += len(animations)
+    def is_consistent(animations):
+        if len(animations) == 0: return True
+        num_stimuli = animations[0].num_stimuli
+        for anim in animations:
+            if anim.num_stimuli != num_stimuli: return False
+        return True
+
+    def add_animations(self, animations):
+        for anim in animations:
+            if isinstance(anim, Animation):
+                self.animations.append(anim)
+                self.num_animations += 1
+            else:
+                assert isinstance(anim, list), "All animations must be single animations or lists!"
+                assert len(anim) > 0, "Animations list is empty."
+                assert ScenefileSchema.is_consistent(anim), "Parallel animations must have the same number of stimuli!"
+                self.animations.append(anim)
+                self.num_animations += 1
 
     def generate_scenefile(self):
         scenefile = self.base.copy()
-        for anim in self.anims:
-            scenefile = Scenefile.apply_anim(scenefile, anim, self.base)
+        for anim in self.animations:
+            scenefile = Scenefile.apply_animation(scenefile, anim, self.base)
         return scenefile

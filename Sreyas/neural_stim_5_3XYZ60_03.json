@@ -1,0 +1,490 @@
+{
+ "CAMERAS": {
+  "camera00": {
+   "type": "PerspectiveCamera",
+   "fieldOfView": 45,
+   "near": 0.1,
+   "far": 2000,
+   "position": {
+    "x": [
+     5.5,
+     5.5,
+     5.5,
+     5.5,
+     5.5,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -5.5,
+     -5.5,
+     -5.5,
+     -5.5,
+     -5.5,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     5.5,
+     5.5,
+     5.5,
+     5.5,
+     5.5,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -5.5,
+     -5.5,
+     -5.5,
+     -5.5,
+     -5.5,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     -2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75,
+     2.75
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     0,
+     0,
+     0,
+     0,
+     0,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     4.76,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76,
+     -4.76
+    ]
+   },
+   "targetTHREEJS": {
+    "x": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     -2.01,
+     -0.9,
+     0,
+     0.78,
+     1.47,
+     -1.47,
+     -0.78,
+     0,
+     0.9,
+     2.01,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2.01,
+     0.9,
+     0,
+     -0.78,
+     -1.47,
+     1.47,
+     0.78,
+     0,
+     -0.9,
+     -2.01,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1.47,
+     0.78,
+     0,
+     -0.9,
+     -2.01,
+     2.01,
+     0.9,
+     0,
+     -0.78,
+     -1.47,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -1.47,
+     -0.78,
+     0,
+     0.9,
+     2.01,
+     -2.01,
+     -0.9,
+     0,
+     0.78,
+     1.47
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     1.47,
+     0.72,
+     0,
+     -0.72,
+     -1.47,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -1.47,
+     -0.72,
+     0,
+     0.72,
+     1.47,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     -1.47,
+     -0.72,
+     0,
+     0.72,
+     1.47,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1.47,
+     0.72,
+     0,
+     -0.72,
+     -1.47,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "visible": [
+    1
+   ]
+  }
+ },
+ "LIGHTS": {
+  "light00": {
+   "type": "DirectionalLight",
+   "color": "0xffffff",
+   "intensity": [
+    5
+   ],
+   "position": {
+    "x": [
+     0
+    ],
+    "y": [
+     1
+    ],
+    "z": [
+     0.05
+    ]
+   },
+   "visible": [
+    1
+   ]
+  },
+  "light01": {
+   "type": "AmbientLight",
+   "color": "0xffffff",
+   "intensity": [
+    5
+   ],
+   "position": {
+    "x": [
+     0
+    ],
+    "y": [
+     1
+    ],
+    "z": [
+     1
+    ]
+   },
+   "visible": [
+    1
+   ]
+  }
+ },
+ "OBJECTS": {
+  "obj0": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/armoire/0bb34bd380aa4330bf1542a9045d44e7.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.24
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0.175
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    1
+   ],
+   "target": [
+    0
+   ]
+  },
+  "obj1": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/microscope/9562226299a045bab13c3d66f8593208.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.3
+   ],
+   "positionTHREEJS": {
+    "x": [
+     -0.15
+    ],
+    "y": [
+     -0.09
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    1
+   ],
+   "target": [
+    0
+   ]
+  },
+  "obj2": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/water_cooler/c85d5cedb1d84126b01368532f0a8209.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0.15
+    ],
+    "y": [
+     -0.09
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    1
+   ],
+   "target": [
+    0
+   ]
+  }
+ },
+ "IMAGES": {
+  "imagebag": "/mkturkfiles/assets/polyhaven/",
+  "imageidx": [
+   46
+  ],
+  "sizeTHREEJS": [
+   10
+  ]
+ },
+ "OBJECTFILTERS": {
+  "blur": [],
+  "brightness": [],
+  "contrast": [],
+  "grayscale": [],
+  "huerotate": [],
+  "invert": [],
+  "opacity": [],
+  "saturate": [],
+  "sepia": []
+ },
+ "IMAGEFILTERS": {
+  "blur": [],
+  "brightness": [],
+  "contrast": [],
+  "grayscale": [],
+  "huerotate": [],
+  "invert": [],
+  "opacity": [],
+  "saturate": [],
+  "sepia": []
+ },
+ "durationMS": 300
+}

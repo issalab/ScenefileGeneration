@@ -1,0 +1,1071 @@
+{
+ "CAMERAS": {
+  "camera00": {
+   "type": "PerspectiveCamera",
+   "fieldOfView": 45,
+   "near": 0.1,
+   "far": 2000,
+   "position": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     5.5
+    ]
+   },
+   "targetTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    1
+   ]
+  }
+ },
+ "LIGHTS": {
+  "light00": {
+   "type": "DirectionalLight",
+   "color": "0xffffff",
+   "intensity": [
+    5
+   ],
+   "position": {
+    "x": [
+     0
+    ],
+    "y": [
+     1
+    ],
+    "z": [
+     0.05
+    ]
+   },
+   "visible": [
+    1
+   ]
+  },
+  "light01": {
+   "type": "AmbientLight",
+   "color": "0xffffff",
+   "intensity": [
+    5
+   ],
+   "position": {
+    "x": [
+     0
+    ],
+    "y": [
+     1
+    ],
+    "z": [
+     1
+    ]
+   },
+   "visible": [
+    1
+   ]
+  }
+ },
+ "OBJECTS": {
+  "obj0": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/ambulance/a431aeb168a049f1879d3f1909433612.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.375
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj1": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/chair/304253851afd493d958fc8e256c189df.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj2": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/avocado/30e0571c29a0490e9183c10b52f34398.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj3": {
+   "meshpath": "/mkturkfiles/scenebags/objectome3d/face/oldman_es_v2.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj4": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/binoculars/e158ee130ac54392b4be7c09fb7557de.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj5": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/apple/dc5a0c0c439942d58d038a10d7064c91.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj6": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/airplane/37b041d8521c4179b3c8679e2ff8dd17.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj7": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/bird/46b359fc3ebf4412917b915415d59e05.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj8": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/alligator/d80372b71bc74dd9af6a0865ccb9091f.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#7F7F7F",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj9": {
+   "meshpath": "/mkturkfiles/scenebags/objectome3d/face/neptuneapplefacepotatoheadnormalhires.glb",
+   "objectdoc": "HeadNeptuneApplefacepotatohead",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj10": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/sofa/42da0122f2134a189767d0911b401c1c.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.3
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj11": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/soccer_ball/3ceae2eee6264843a77aaaf298134744.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.23
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj12": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/violin/7f4a2e4d5d434450a67770f03496e083.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj13": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/armoire/0bb34bd380aa4330bf1542a9045d44e7.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.24
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0
+   ],
+   "target": 0
+  },
+  "obj14": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/microscope/9562226299a045bab13c3d66f8593208.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.3
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "target": 0
+  },
+  "obj15": {
+   "meshpath": "/mkturkfiles/assets/objaverse_final/water_cooler/c85d5cedb1d84126b01368532f0a8209.glb",
+   "objectdoc": "",
+   "texture": true,
+   "material": {
+    "type": "MeshPhysicalMaterial",
+    "color": "#242424",
+    "metalness": 0.25,
+    "roughness": 0.65,
+    "reflectivity": 0.5,
+    "opacity": [
+     1
+    ],
+    "transparent": "false"
+   },
+   "sizeTHREEJS": [
+    0.25
+   ],
+   "positionTHREEJS": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "rotationDegrees": {
+    "x": [
+     0
+    ],
+    "y": [
+     0
+    ],
+    "z": [
+     0
+    ]
+   },
+   "visible": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "target": 0
+  }
+ },
+ "IMAGES": {
+  "imagebag": "/mkturkfiles/assets/polyhaven/",
+  "imageidx": [],
+  "sizeTHREEJS": [
+   10
+  ]
+ },
+ "OBJECTFILTERS": {
+  "blur": [],
+  "brightness": [],
+  "contrast": [],
+  "grayscale": [],
+  "huerotate": [],
+  "invert": [],
+  "opacity": [],
+  "saturate": [],
+  "sepia": []
+ },
+ "IMAGEFILTERS": {
+  "blur": [],
+  "brightness": [],
+  "contrast": [],
+  "grayscale": [],
+  "huerotate": [],
+  "invert": [],
+  "opacity": [],
+  "saturate": [],
+  "sepia": []
+ },
+ "durationMS": 300
+}
